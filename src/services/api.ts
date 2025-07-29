@@ -32,9 +32,6 @@ class ApiService {
     };
 
     try {
-      // Log the request
-      
-
       const response = await fetch(url, config);
 
       if (!response.ok) {
