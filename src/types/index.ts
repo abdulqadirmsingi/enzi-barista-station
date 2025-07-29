@@ -22,10 +22,55 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  totalAmount: number;
+  itemCount: number;
   items: OrderItem[];
-  total: number;
-  timestamp: string;
-  barista_id: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface CreateOrderRequest {
+  items: OrderItem[];
+  totalAmount: number;
+  itemCount: number;
+}
+
+export interface OrdersPaginationResponse {
+  orders: Order[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalOrders: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+export interface SalesStats {
+  totalOrders: number;
+  totalRevenue: number;
+  avgOrderValue: number;
+  topItems: {
+    name: string;
+    quantity: number;
+    revenue: number;
+  }[];
+}
+
+export interface ReceiptData {
+  orderId: string;
+  items: OrderItem[];
+  totalAmount: number;
+  createdAt: string;
+  barista: {
+    name: string;
+    email: string;
+  };
+  receiptNumber: string;
 }
 
 // Auth request types

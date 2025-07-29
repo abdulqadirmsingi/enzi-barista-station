@@ -1,18 +1,25 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useOrderStore } from '@/stores/orderStore';
-import { useAuthStore } from '@/stores/authStore';
-import { formatCurrency } from '@/utils/currency';
-import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { OrderSummaryModal } from './OrderSummaryModal';
-import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useOrderStore } from "@/stores/orderStore";
+import { useAuthStore } from "@/stores/authStore";
+import { formatCurrency } from "@/utils/currency";
+import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { OrderSummaryModal } from "./OrderSummaryModal";
+import { OrderSuccessModal } from "./OrderSuccessModal";
+import { useState } from "react";
+import { useOrders } from "@/hooks/useOrders";
+import { CreateOrderRequest, Order } from "@/types";
 
 export const CurrentOrder = () => {
-  const { currentOrder, updateQuantity, removeItem, clearOrder, getTotal } = useOrderStore();
+  const { currentOrder, updateQuantity, removeItem, clearOrder, getTotal } =
+    useOrderStore();
   const user = useAuthStore((state) => state.user);
   const { toast } = useToast();
+  const { createOrder, loading } = useOrders();
   const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [lastOrder, setLastOrder] = useState<Order | null>(null);
 
   const handleOpenSummary = () => {
     if (currentOrder.length === 0) {
@@ -28,29 +35,21 @@ export const CurrentOrder = () => {
 
   const handleConfirmOrder = async () => {
     try {
-      // Mock order placement - replace with Supabase database call
-      const order = {
-        id: `order_${Date.now()}`,
+      const orderData: CreateOrderRequest = {
         items: currentOrder,
-        total: getTotal(),
-        timestamp: new Date().toISOString(),
-        barista_id: user?.id || 'unknown'
+        totalAmount: Math.round(getTotal()), // Amount is already in base currency units
+        itemCount: currentOrder.reduce((sum, item) => sum + item.quantity, 0),
       };
 
-      console.log('Order placed:', order);
-      
+      const order = await createOrder(orderData);
+
       clearOrder();
       setShowSummaryModal(false);
-      toast({
-        title: "Order placed successfully!",
-        description: `Total: ${formatCurrency(order.total)}`,
-      });
+      setLastOrder(order);
+      setShowSuccessModal(true);
     } catch (error) {
-      toast({
-        title: "Error placing order",
-        description: "Please try again.",
-        variant: "destructive",
-      });
+      // Error handling is done in the useOrders hook
+      console.error("Failed to place order:", error);
     }
   };
 
@@ -71,7 +70,10 @@ export const CurrentOrder = () => {
           <>
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {currentOrder.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-order-item rounded-lg">
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-3 bg-order-item rounded-lg"
+                >
                   <div className="flex-1">
                     <h4 className="font-medium">{item.name}</h4>
                     <p className="text-sm text-muted-foreground">
@@ -86,7 +88,9 @@ export const CurrentOrder = () => {
                     >
                       <Minus className="w-3 h-3" />
                     </Button>
-                    <span className="w-8 text-center font-medium">{item.quantity}</span>
+                    <span className="w-8 text-center font-medium">
+                      {item.quantity}
+                    </span>
                     <Button
                       size="sm"
                       variant="outline"
@@ -106,22 +110,22 @@ export const CurrentOrder = () => {
                 </div>
               ))}
             </div>
-            
+
             <div className="border-t pt-4 space-y-4">
               <div className="flex justify-between text-lg font-bold">
                 <span>Total:</span>
                 <span>{formatCurrency(getTotal())}</span>
               </div>
-              
+
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={clearOrder}
                   className="flex-1"
                 >
                   Clear
                 </Button>
-                <Button 
+                <Button
                   onClick={handleOpenSummary}
                   className="flex-1 bg-coffee hover:bg-coffee-medium"
                 >
@@ -132,11 +136,18 @@ export const CurrentOrder = () => {
           </>
         )}
       </CardContent>
-      
-      <OrderSummaryModal 
+
+      <OrderSummaryModal
         open={showSummaryModal}
         onOpenChange={setShowSummaryModal}
         onConfirm={handleConfirmOrder}
+        loading={loading}
+      />
+
+      <OrderSuccessModal
+        open={showSuccessModal}
+        onOpenChange={setShowSuccessModal}
+        order={lastOrder}
       />
     </Card>
   );

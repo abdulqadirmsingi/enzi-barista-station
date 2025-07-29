@@ -1,36 +1,39 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { PrintableReceipt } from '@/components/pos/PrintableReceipt';
-import { OrderItem } from '@/types';
-import { useRef } from 'react';
-import { Printer, Download } from 'lucide-react';
-import { useReactToPrint } from 'react-to-print';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { PrintableReceipt } from "@/components/pos/PrintableReceipt";
+import { ReceiptData } from "@/types";
+import { useRef } from "react";
+import { Printer } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
 
 interface ReceiptModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  orderId: string;
-  items: OrderItem[];
-  total: number;
-  timestamp: string;
-  baristaName?: string;
+  receiptData: ReceiptData | null;
 }
 
 export const ReceiptModal = ({
   open,
   onOpenChange,
-  orderId,
-  items,
-  total,
-  timestamp,
-  baristaName
+  receiptData,
 }: ReceiptModalProps) => {
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
-    documentTitle: `Receipt-${orderId}`,
+    documentTitle: receiptData
+      ? `Receipt-${receiptData.receiptNumber}`
+      : "Receipt",
   });
+
+  if (!receiptData) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,16 +44,9 @@ export const ReceiptModal = ({
             Order Receipt
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="flex justify-center bg-gray-50 p-4 rounded-lg">
-          <PrintableReceipt
-            ref={receiptRef}
-            orderId={orderId}
-            items={items}
-            total={total}
-            timestamp={timestamp}
-            baristaName={baristaName}
-          />
+          <PrintableReceipt ref={receiptRef} receiptData={receiptData} />
         </div>
 
         <div className="flex gap-2 pt-4">

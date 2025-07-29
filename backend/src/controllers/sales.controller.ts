@@ -5,11 +5,13 @@ import { AppError } from "../middleware/error.middleware";
 import {
   AuthenticatedRequest,
   ApiResponse,
+  SalesStats,
   SalesSummary,
   OrderWithDetails,
+  PrismaOrder,
+  ReceiptData,
   DateFilter,
   OrderItem,
-  PrismaOrder,
 } from "../types";
 
 // Validation schema for date filters
@@ -78,37 +80,45 @@ export const getDailySales = async (
     // Calculate summary statistics
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce(
-      (sum: number, order: PrismaOrder) => sum + order.totalAmount,
+      (sum: number, order) => sum + order.totalAmount,
       0
     );
     const totalItems = orders.reduce(
-      (sum: number, order: PrismaOrder) => sum + order.itemCount,
+      (sum: number, order) => sum + order.itemCount,
       0
     );
 
     // Format orders for response
-    const formattedOrders: OrderWithDetails[] = orders.map(
-      (order: PrismaOrder) => ({
-        id: order.id,
-        totalAmount: order.totalAmount,
-        itemCount: order.itemCount,
-        items: order.items as OrderItem[],
-        createdAt: order.createdAt,
-        user: order.user,
-      })
-    );
+    const formattedOrders: OrderWithDetails[] = orders.map((order) => ({
+      id: order.id,
+      totalAmount: order.totalAmount,
+      itemCount: order.itemCount,
+      items: order.items as unknown as OrderItem[],
+      createdAt: order.createdAt,
+      user: {
+        name: order.user.name,
+        email: order.user.email,
+      },
+    }));
 
-    const salesSummary: SalesSummary = {
+    // Create stats object to match frontend expectations
+    const stats: SalesStats = {
       totalOrders,
       totalRevenue,
-      totalItems,
-      orders: formattedOrders,
+      avgOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+      topItems: [], // We can populate this later if needed
     };
 
-    const response: ApiResponse<SalesSummary> = {
+    const response: ApiResponse<{
+      stats: SalesStats;
+      orders: OrderWithDetails[];
+    }> = {
       success: true,
       message: "Sales summary retrieved successfully",
-      data: salesSummary,
+      data: {
+        stats,
+        orders: formattedOrders,
+      },
     };
 
     res.status(200).json(response);
@@ -180,37 +190,45 @@ export const getUserSales = async (
     // Calculate summary statistics
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce(
-      (sum: number, order: PrismaOrder) => sum + order.totalAmount,
+      (sum: number, order) => sum + order.totalAmount,
       0
     );
     const totalItems = orders.reduce(
-      (sum: number, order: PrismaOrder) => sum + order.itemCount,
+      (sum: number, order) => sum + order.itemCount,
       0
     );
 
     // Format orders for response
-    const formattedOrders: OrderWithDetails[] = orders.map(
-      (order: PrismaOrder) => ({
-        id: order.id,
-        totalAmount: order.totalAmount,
-        itemCount: order.itemCount,
-        items: order.items as OrderItem[],
-        createdAt: order.createdAt,
-        user: order.user,
-      })
-    );
+    const formattedOrders: OrderWithDetails[] = orders.map((order) => ({
+      id: order.id,
+      totalAmount: order.totalAmount,
+      itemCount: order.itemCount,
+      items: order.items as unknown as OrderItem[],
+      createdAt: order.createdAt,
+      user: {
+        name: order.user.name,
+        email: order.user.email,
+      },
+    }));
 
-    const salesSummary: SalesSummary = {
+    // Create stats object to match frontend expectations
+    const stats: SalesStats = {
       totalOrders,
       totalRevenue,
-      totalItems,
-      orders: formattedOrders,
+      avgOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+      topItems: [], // We can populate this later if needed
     };
 
-    const response: ApiResponse<SalesSummary> = {
+    const response: ApiResponse<{
+      stats: SalesStats;
+      orders: OrderWithDetails[];
+    }> = {
       success: true,
       message: "User sales summary retrieved successfully",
-      data: salesSummary,
+      data: {
+        stats,
+        orders: formattedOrders,
+      },
     };
 
     res.status(200).json(response);
@@ -378,6 +396,66 @@ export const getTopSellingItems = async (
     if (error instanceof z.ZodError) {
       return next(new AppError(error.errors[0].message, 400));
     }
+    next(error);
+  }
+};
+
+// Get receipt data for a specific order
+export const getOrderReceipt = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.user!.id;
+
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        userId, // Ensure user can only access their own orders
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      return next(new AppError("Order not found", 404));
+    }
+
+    // Generate receipt number (format: YYYY-MM-DD-XXXXX)
+    const date = new Date(order.createdAt);
+    const dateStr = date.toISOString().split("T")[0];
+    const timeStr = date.getTime().toString().slice(-5);
+    const receiptNumber = `${dateStr}-${timeStr}`;
+
+    const receiptData: ReceiptData = {
+      orderId: order.id,
+      items: order.items as unknown as OrderItem[],
+      totalAmount: order.totalAmount,
+      createdAt: order.createdAt.toISOString(),
+      barista: {
+        name: order.user.name,
+        email: order.user.email,
+      },
+      receiptNumber,
+    };
+
+    const response: ApiResponse = {
+      success: true,
+      message: "Receipt data retrieved successfully",
+      data: { receipt: receiptData },
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
     next(error);
   }
 };

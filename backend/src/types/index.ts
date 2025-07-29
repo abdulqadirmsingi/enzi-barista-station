@@ -47,6 +47,47 @@ export interface LoginRequest {
   password: string;
 }
 
+// Order with user relation type (for Prisma responses)
+export interface PrismaOrderWithUser {
+  id: string;
+  userId: string;
+  totalAmount: number;
+  itemCount: number;
+  items: unknown; // JSON field
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+// Sales statistics type
+export interface SalesStats {
+  totalOrders: number;
+  totalRevenue: number;
+  avgOrderValue: number;
+  topItems: {
+    name: string;
+    quantity: number;
+    revenue: number;
+  }[];
+}
+
+// Receipt data type
+export interface ReceiptData {
+  orderId: string;
+  items: OrderItem[];
+  totalAmount: number;
+  createdAt: string;
+  barista: {
+    name: string;
+    email: string;
+  };
+  receiptNumber: string;
+}
+
 // API Response types
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -65,12 +106,32 @@ export interface AuthResponse {
   token: string;
 }
 
-// Sales summary types
-export interface SalesSummary {
-  totalOrders: number;
-  totalRevenue: number;
-  totalItems: number;
-  orders: OrderWithDetails[];
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+// Date filter types
+export interface DateFilter {
+  startDate?: string;
+  endDate?: string;
+  shift?: "AM" | "PM";
+}
+
+// Additional order types for sales functionality
+export interface PrismaOrder {
+  id: string;
+  userId: string;
+  totalAmount: number;
+  itemCount: number;
+  items: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export interface OrderWithDetails {
@@ -85,44 +146,9 @@ export interface OrderWithDetails {
   };
 }
 
-// Prisma order type for database responses
-export interface PrismaOrder {
-  id: string;
-  totalAmount: number;
-  itemCount: number;
-  items: unknown; // Prisma Json type
-  createdAt: Date;
-  user: {
-    name: string;
-    email: string;
-  };
-}
-
-// Prisma order with user included (for create operations)
-export interface PrismaOrderWithUser {
-  id: string;
-  totalAmount: number;
-  itemCount: number;
-  items: unknown; // Prisma Json type
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
-
-// Date filter types
-export interface DateFilter {
-  startDate?: string;
-  endDate?: string;
-  shift?: "AM" | "PM";
-}
-
-// Validation error type
-export interface ValidationError {
-  field: string;
-  message: string;
+export interface SalesSummary {
+  totalOrders: number;
+  totalRevenue: number;
+  totalItems: number;
+  orders: OrderWithDetails[];
 }

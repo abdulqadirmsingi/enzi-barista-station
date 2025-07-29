@@ -5,6 +5,7 @@ import {
   getUserSales,
   getSalesAnalytics,
   getTopSellingItems,
+  getOrderReceipt,
 } from "../controllers/sales.controller";
 
 const router = Router();
@@ -23,5 +24,8 @@ router.get("/analytics", getSalesAnalytics);
 
 // Get top selling items
 router.get("/top-items", getTopSellingItems);
+
+// Get receipt for specific order
+router.get("/receipt/:orderId", getOrderReceipt);
 
 export default router;
