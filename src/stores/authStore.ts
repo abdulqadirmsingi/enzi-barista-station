@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { User, RegisterRequest, LoginRequest } from "@/types";
 import { apiService } from "@/services/api";
-import { toast, logAction } from "@/utils/toast";
+import { toast } from "@/utils/toast";
 
 interface AuthState {
   user: User | null;
@@ -36,8 +36,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (data: RegisterRequest) => {
     set({ isLoading: true, error: null });
 
-    // Log registration attempt
-    logAction.auth.register(data.email, data.name);
     toast.loading(
       "Creating your account...",
       "Please wait while we set up your profile"
@@ -56,8 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           error: null,
         });
 
-        // Log success and show toast
-        logAction.auth.registerSuccess(user);
+      
         toast.success(
           "Account created successfully!",
           `Welcome, ${user.name}! You can now start using the POS system.`
@@ -68,8 +65,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const errorMessage = response.message || "Registration failed";
         set({ isLoading: false, error: errorMessage });
 
-        // Log error and show toast
-        logAction.auth.registerError(errorMessage);
+    
         toast.error("Registration failed", errorMessage);
 
         return { success: false, error: errorMessage };
@@ -79,8 +75,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error instanceof Error ? error.message : "Registration failed";
       set({ isLoading: false, error: errorMessage });
 
-      // Log error and show toast
-      logAction.auth.registerError(errorMessage);
       toast.error(
         "Registration failed",
         "Please check your information and try again"
@@ -93,8 +87,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (data: LoginRequest) => {
     set({ isLoading: true, error: null });
 
-    // Log login attempt
-    logAction.auth.login(data.email);
     toast.loading("Signing you in...", "Verifying your credentials");
 
     try {
@@ -110,8 +102,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           error: null,
         });
 
-        // Log success and show toast
-        logAction.auth.loginSuccess(user);
         toast.success(
           "Welcome back!",
           `Successfully signed in as ${user.name}`
@@ -122,8 +112,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const errorMessage = response.message || "Login failed";
         set({ isLoading: false, error: errorMessage });
 
-        // Log error and show toast
-        logAction.auth.loginError(errorMessage);
         toast.error("Sign in failed", errorMessage);
 
         return { success: false, error: errorMessage };
@@ -133,8 +121,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error instanceof Error ? error.message : "Login failed";
       set({ isLoading: false, error: errorMessage });
 
-      // Log error and show toast
-      logAction.auth.loginError(errorMessage);
       toast.error("Sign in failed", "Please check your email and password");
 
       return { success: false, error: errorMessage };
@@ -150,8 +136,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await apiService.logout();
 
-      // Log success and show toast
-      logAction.auth.logout();
       toast.success(
         "Signed out successfully",
         "You have been safely logged out"

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { OrderItem, MenuItem } from "@/types";
-import { toast, logAction } from "@/utils/toast";
+import { toast } from "@/utils/toast";
 
 interface OrderState {
   currentOrder: OrderItem[];
@@ -21,12 +21,10 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       if (existingItem) {
         const newQuantity = existingItem.quantity + 1;
 
-        // Log the action
-        logAction.pos.updateQuantity(item, existingItem.quantity, newQuantity);
-        toast.success(
-          `Added ${item.name}`,
-          `Quantity updated to ${newQuantity}`
-        );
+        // Only show toast for significant quantity changes (every 2nd item)
+        if (newQuantity % 2 === 0 || newQuantity === 2) {
+          toast.success(`${item.name}`, `Quantity: ${newQuantity}`);
+        }
 
         return {
           currentOrder: state.currentOrder.map((orderItem) =>
@@ -36,11 +34,9 @@ export const useOrderStore = create<OrderState>((set, get) => ({
           ),
         };
       } else {
-        // Log the action
-        logAction.pos.addItem(item, 1);
         toast.success(
           `Added ${item.name}`,
-          `Added to your order for $${item.price.toFixed(2)}`
+          `TZS ${item.price.toLocaleString("en-TZ")}`
         );
 
         return {
@@ -52,9 +48,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     set((state) => {
       const item = state.currentOrder.find((orderItem) => orderItem.id === id);
       if (item) {
-        // Log the action
-        logAction.pos.removeItem(item);
-        toast.info(`Removed ${item.name}`, "Item removed from your order");
+        toast.info(`Removed ${item.name}`);
       }
 
       return {
@@ -67,16 +61,9 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
       if (item) {
         if (quantity <= 0) {
-          // Log removal
-          logAction.pos.removeItem(item);
-          toast.info(`Removed ${item.name}`, "Item removed from your order");
+          toast.info(`Removed ${item.name}`);
         } else {
-          // Log quantity update
-          logAction.pos.updateQuantity(item, item.quantity, quantity);
-          toast.success(
-            `Updated ${item.name}`,
-            `Quantity changed to ${quantity}`
-          );
+          toast.success(`${item.name}`, `Quantity: ${quantity}`);
         }
       }
 
@@ -92,9 +79,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   clearOrder: () =>
     set((state) => {
       if (state.currentOrder.length > 0) {
-        // Log the action
-        logAction.pos.clearOrder();
-        toast.info("Order cleared", "All items removed from your order");
+        toast.info("Order cleared");
       }
 
       return { currentOrder: [] };

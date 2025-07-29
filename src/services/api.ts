@@ -10,7 +10,7 @@ import {
   SalesStats,
   ReceiptData,
 } from "@/types";
-import { logAction } from "@/utils/toast";
+
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -33,7 +33,7 @@ class ApiService {
 
     try {
       // Log the request
-      logAction.api.request(method, endpoint, options.body);
+      
 
       const response = await fetch(url, config);
 
@@ -43,23 +43,16 @@ class ApiService {
           errorData.message || `HTTP error! status: ${response.status}`
         );
 
-        // Log the error response
-        logAction.api.response(method, endpoint, response.status, errorData);
-        logAction.api.error(method, endpoint, error);
-
         throw error;
       }
 
       const data = await response.json();
 
-      // Log successful response
-      logAction.api.response(method, endpoint, response.status, data);
-
       return data;
     } catch (error) {
       // Log the error if it's not already logged
       if (error instanceof Error && !error.message.includes("HTTP error!")) {
-        logAction.api.error(method, endpoint, error);
+        console.error('API Error:', { method, endpoint, error: error.message });
       }
       throw error;
     }
