@@ -6,25 +6,26 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/stores/authStore";
-import { loginSchema, LoginFormData } from "@/utils/validation";
-import { LoginRequest } from "@/types";
+import { registerSchema, RegisterFormData } from "@/utils/validation";
+import { RegisterRequest } from "@/types";
 import { AlertCircle } from "lucide-react";
 import { ZodError } from "zod";
 
-export const LoginForm = () => {
-  const [formData, setFormData] = useState<LoginFormData>({
+export const RegisterForm = () => {
+  const [formData, setFormData] = useState<RegisterFormData>({
     email: "",
     password: "",
+    name: "",
   });
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
 
   const navigate = useNavigate();
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { register, isLoading, error, clearError } = useAuthStore();
 
   const handleInputChange =
-    (field: keyof LoginFormData) =>
+    (field: keyof RegisterFormData) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormData((prev) => ({ ...prev, [field]: e.target.value }));
       // Clear validation error for this field
@@ -39,7 +40,7 @@ export const LoginForm = () => {
 
   const validateForm = (): boolean => {
     try {
-      loginSchema.parse(formData);
+      registerSchema.parse(formData);
       setValidationErrors({});
       return true;
     } catch (error) {
@@ -64,7 +65,7 @@ export const LoginForm = () => {
     }
 
     // Type assertion is safe here because we've validated the form
-    const result = await login(formData as LoginRequest);
+    const result = await register(formData as RegisterRequest);
 
     if (result.success) {
       navigate("/pos");
@@ -75,9 +76,9 @@ export const LoginForm = () => {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+        <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
         <p className="text-muted-foreground">
-          Sign in to access the POS system
+          Sign up to access the POS system
         </p>
       </CardHeader>
       <CardContent>
@@ -88,6 +89,22 @@ export const LoginForm = () => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
+          <div className="space-y-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="John Doe"
+              value={formData.name}
+              onChange={handleInputChange("name")}
+              required
+              className={validationErrors.name ? "border-red-500" : ""}
+            />
+            {validationErrors.name && (
+              <p className="text-sm text-red-500">{validationErrors.name}</p>
+            )}
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -124,18 +141,18 @@ export const LoginForm = () => {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
+            {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
 
           <div className="text-center text-sm">
             <span className="text-muted-foreground">
-              Don't have an account?{" "}
+              Already have an account?{" "}
             </span>
             <Link
-              to="/register"
+              to="/login"
               className="text-primary hover:underline font-medium"
             >
-              Create account
+              Sign in
             </Link>
           </div>
         </form>

@@ -1,0 +1,383 @@
+import { Response, NextFunction } from "express";
+import { z } from "zod";
+import { prisma } from "../utils/database";
+import { AppError } from "../middleware/error.middleware";
+import {
+  AuthenticatedRequest,
+  ApiResponse,
+  SalesSummary,
+  OrderWithDetails,
+  DateFilter,
+  OrderItem,
+  PrismaOrder,
+} from "../types";
+
+// Validation schema for date filters
+const dateFilterSchema = z.object({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  shift: z.enum(["AM", "PM"]).optional(),
+});
+
+// Get daily sales summary
+export const getDailySales = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    // Parse and validate query parameters
+    const filters = dateFilterSchema.parse(req.query) as DateFilter;
+
+    // Set default to today if no date provided
+    const today = new Date();
+    const startDate = filters.startDate
+      ? new Date(filters.startDate)
+      : new Date(today.setHours(0, 0, 0, 0));
+    const endDate = filters.endDate
+      ? new Date(filters.endDate)
+      : new Date(today.setHours(23, 59, 59, 999));
+
+    // Adjust for shift filtering
+    let queryStartDate = startDate;
+    let queryEndDate = endDate;
+
+    if (filters.shift === "AM") {
+      queryStartDate = new Date(startDate);
+      queryStartDate.setHours(0, 0, 0, 0);
+      queryEndDate = new Date(startDate);
+      queryEndDate.setHours(11, 59, 59, 999);
+    } else if (filters.shift === "PM") {
+      queryStartDate = new Date(startDate);
+      queryStartDate.setHours(12, 0, 0, 0);
+      queryEndDate = new Date(startDate);
+      queryEndDate.setHours(23, 59, 59, 999);
+    }
+
+    // Get orders for the specified date range
+    const orders = await prisma.order.findMany({
+      where: {
+        createdAt: {
+          gte: queryStartDate,
+          lte: queryEndDate,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Calculate summary statistics
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce(
+      (sum: number, order: PrismaOrder) => sum + order.totalAmount,
+      0
+    );
+    const totalItems = orders.reduce(
+      (sum: number, order: PrismaOrder) => sum + order.itemCount,
+      0
+    );
+
+    // Format orders for response
+    const formattedOrders: OrderWithDetails[] = orders.map(
+      (order: PrismaOrder) => ({
+        id: order.id,
+        totalAmount: order.totalAmount,
+        itemCount: order.itemCount,
+        items: order.items as OrderItem[],
+        createdAt: order.createdAt,
+        user: order.user,
+      })
+    );
+
+    const salesSummary: SalesSummary = {
+      totalOrders,
+      totalRevenue,
+      totalItems,
+      orders: formattedOrders,
+    };
+
+    const response: ApiResponse<SalesSummary> = {
+      success: true,
+      message: "Sales summary retrieved successfully",
+      data: salesSummary,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return next(new AppError(error.errors[0].message, 400));
+    }
+    next(error);
+  }
+};
+
+// Get sales for current user only
+export const getUserSales = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const filters = dateFilterSchema.parse(req.query) as DateFilter;
+
+    // Set default to today if no date provided
+    const today = new Date();
+    const startDate = filters.startDate
+      ? new Date(filters.startDate)
+      : new Date(today.setHours(0, 0, 0, 0));
+    const endDate = filters.endDate
+      ? new Date(filters.endDate)
+      : new Date(today.setHours(23, 59, 59, 999));
+
+    // Adjust for shift filtering
+    let queryStartDate = startDate;
+    let queryEndDate = endDate;
+
+    if (filters.shift === "AM") {
+      queryStartDate = new Date(startDate);
+      queryStartDate.setHours(0, 0, 0, 0);
+      queryEndDate = new Date(startDate);
+      queryEndDate.setHours(11, 59, 59, 999);
+    } else if (filters.shift === "PM") {
+      queryStartDate = new Date(startDate);
+      queryStartDate.setHours(12, 0, 0, 0);
+      queryEndDate = new Date(startDate);
+      queryEndDate.setHours(23, 59, 59, 999);
+    }
+
+    // Get user's orders for the specified date range
+    const orders = await prisma.order.findMany({
+      where: {
+        userId,
+        createdAt: {
+          gte: queryStartDate,
+          lte: queryEndDate,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Calculate summary statistics
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce(
+      (sum: number, order: PrismaOrder) => sum + order.totalAmount,
+      0
+    );
+    const totalItems = orders.reduce(
+      (sum: number, order: PrismaOrder) => sum + order.itemCount,
+      0
+    );
+
+    // Format orders for response
+    const formattedOrders: OrderWithDetails[] = orders.map(
+      (order: PrismaOrder) => ({
+        id: order.id,
+        totalAmount: order.totalAmount,
+        itemCount: order.itemCount,
+        items: order.items as OrderItem[],
+        createdAt: order.createdAt,
+        user: order.user,
+      })
+    );
+
+    const salesSummary: SalesSummary = {
+      totalOrders,
+      totalRevenue,
+      totalItems,
+      orders: formattedOrders,
+    };
+
+    const response: ApiResponse<SalesSummary> = {
+      success: true,
+      message: "User sales summary retrieved successfully",
+      data: salesSummary,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return next(new AppError(error.errors[0].message, 400));
+    }
+    next(error);
+  }
+};
+
+// Get sales analytics (overall statistics)
+export const getSalesAnalytics = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const filters = dateFilterSchema.parse(req.query) as DateFilter;
+
+    // Set default to last 30 days if no date provided
+    const today = new Date();
+    const defaultStartDate = new Date(
+      today.getTime() - 30 * 24 * 60 * 60 * 1000
+    );
+    const startDate = filters.startDate
+      ? new Date(filters.startDate)
+      : defaultStartDate;
+    const endDate = filters.endDate ? new Date(filters.endDate) : today;
+
+    // Get total orders and revenue
+    const [totalStats, dailyStats] = await Promise.all([
+      prisma.order.aggregate({
+        where: {
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        _count: {
+          id: true,
+        },
+        _sum: {
+          totalAmount: true,
+          itemCount: true,
+        },
+      }),
+      prisma.$queryRaw`
+        SELECT 
+          DATE(created_at) as date,
+          COUNT(*) as orders,
+          SUM(total_amount) as revenue,
+          SUM(item_count) as items
+        FROM orders 
+        WHERE created_at >= ${startDate} AND created_at <= ${endDate}
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) DESC
+      `,
+    ]);
+
+    const analytics = {
+      overview: {
+        totalOrders: totalStats._count.id || 0,
+        totalRevenue: totalStats._sum.totalAmount || 0,
+        totalItems: totalStats._sum.itemCount || 0,
+        averageOrderValue: totalStats._count.id
+          ? Math.round(
+              (totalStats._sum.totalAmount || 0) / totalStats._count.id
+            )
+          : 0,
+      },
+      dailyBreakdown: dailyStats,
+      dateRange: {
+        startDate,
+        endDate,
+      },
+    };
+
+    const response: ApiResponse = {
+      success: true,
+      message: "Sales analytics retrieved successfully",
+      data: analytics,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return next(new AppError(error.errors[0].message, 400));
+    }
+    next(error);
+  }
+};
+
+// Get top selling items
+export const getTopSellingItems = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const filters = dateFilterSchema.parse(req.query) as DateFilter;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    // Set default to last 30 days if no date provided
+    const today = new Date();
+    const defaultStartDate = new Date(
+      today.getTime() - 30 * 24 * 60 * 60 * 1000
+    );
+    const startDate = filters.startDate
+      ? new Date(filters.startDate)
+      : defaultStartDate;
+    const endDate = filters.endDate ? new Date(filters.endDate) : today;
+
+    // Get all orders in the date range
+    const orders = await prisma.order.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      select: {
+        items: true,
+      },
+    });
+
+    // Aggregate item sales
+    const itemSales: Map<
+      number,
+      { name: string; quantity: number; revenue: number }
+    > = new Map();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    orders.forEach((order: any) => {
+      const items = order.items as OrderItem[];
+      items.forEach((item: OrderItem) => {
+        const existing = itemSales.get(item.id) || {
+          name: item.name,
+          quantity: 0,
+          revenue: 0,
+        };
+        existing.quantity += item.quantity;
+        existing.revenue += item.price * item.quantity;
+        itemSales.set(item.id, existing);
+      });
+    });
+
+    // Convert to array and sort by quantity
+    const topItems = Array.from(itemSales.entries())
+      .map(([id, data]) => ({ id, ...data }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, limit);
+
+    const response: ApiResponse = {
+      success: true,
+      message: "Top selling items retrieved successfully",
+      data: {
+        items: topItems,
+        dateRange: { startDate, endDate },
+      },
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return next(new AppError(error.errors[0].message, 400));
+    }
+    next(error);
+  }
+};
