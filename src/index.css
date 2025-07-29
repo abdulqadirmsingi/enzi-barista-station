@@ -19,9 +19,16 @@
     --primary: 0 0% 8%;
     --primary-foreground: 0 0% 98%;
 
-    /* Coffee-inspired accent */
+    /* Coffee-inspired accents */
     --coffee: 25 15% 20%;
     --coffee-light: 25 10% 85%;
+    --coffee-medium: 25 25% 35%;
+    --coffee-warm: 30 35% 65%;
+    
+    /* Brown theme variants */
+    --brown: 25 20% 30%;
+    --brown-light: 25 15% 85%;
+    --brown-dark: 25 25% 15%;
 
     /* Success for completed orders */
     --success: 142 76% 36%;

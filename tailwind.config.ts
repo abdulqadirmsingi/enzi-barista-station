@@ -30,7 +30,14 @@ export default {
 				},
 				coffee: {
 					DEFAULT: 'hsl(var(--coffee))',
-					light: 'hsl(var(--coffee-light))'
+					light: 'hsl(var(--coffee-light))',
+					medium: 'hsl(var(--coffee-medium))',
+					warm: 'hsl(var(--coffee-warm))'
+				},
+				brown: {
+					DEFAULT: 'hsl(var(--brown))',
+					light: 'hsl(var(--brown-light))',
+					dark: 'hsl(var(--brown-dark))'
 				},
 				success: {
 					DEFAULT: 'hsl(var(--success))',

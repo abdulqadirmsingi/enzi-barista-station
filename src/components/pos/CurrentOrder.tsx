@@ -5,13 +5,16 @@ import { useAuthStore } from '@/stores/authStore';
 import { formatCurrency } from '@/utils/currency';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { OrderSummaryModal } from './OrderSummaryModal';
+import { useState } from 'react';
 
 export const CurrentOrder = () => {
   const { currentOrder, updateQuantity, removeItem, clearOrder, getTotal } = useOrderStore();
   const user = useAuthStore((state) => state.user);
   const { toast } = useToast();
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
 
-  const handlePlaceOrder = async () => {
+  const handleOpenSummary = () => {
     if (currentOrder.length === 0) {
       toast({
         title: "Empty order",
@@ -20,7 +23,10 @@ export const CurrentOrder = () => {
       });
       return;
     }
+    setShowSummaryModal(true);
+  };
 
+  const handleConfirmOrder = async () => {
     try {
       // Mock order placement - replace with Supabase database call
       const order = {
@@ -34,6 +40,7 @@ export const CurrentOrder = () => {
       console.log('Order placed:', order);
       
       clearOrder();
+      setShowSummaryModal(false);
       toast({
         title: "Order placed successfully!",
         description: `Total: ${formatCurrency(order.total)}`,
@@ -115,8 +122,8 @@ export const CurrentOrder = () => {
                   Clear
                 </Button>
                 <Button 
-                  onClick={handlePlaceOrder}
-                  className="flex-1"
+                  onClick={handleOpenSummary}
+                  className="flex-1 bg-coffee hover:bg-coffee-medium"
                 >
                   Place Order
                 </Button>
@@ -125,6 +132,12 @@ export const CurrentOrder = () => {
           </>
         )}
       </CardContent>
+      
+      <OrderSummaryModal 
+        open={showSummaryModal}
+        onOpenChange={setShowSummaryModal}
+        onConfirm={handleConfirmOrder}
+      />
     </Card>
   );
 };
