@@ -34,11 +34,32 @@ export const getDailySales = async (
     // Set default to today if no date provided
     const today = new Date();
     const startDate = filters.startDate
-      ? new Date(filters.startDate)
-      : new Date(today.setHours(0, 0, 0, 0));
+      ? new Date(filters.startDate + "T00:00:00.000Z")
+      : new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          0,
+          0,
+          0,
+          0
+        );
     const endDate = filters.endDate
-      ? new Date(filters.endDate)
-      : new Date(today.setHours(23, 59, 59, 999));
+      ? new Date(filters.endDate + "T23:59:59.999Z")
+      : new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59,
+          999
+        );
+
+    console.log(`[getDailySales] Input filters:`, filters);
+    console.log(
+      `[getDailySales] Calculated date range: ${startDate.toISOString()} to ${endDate.toISOString()}`
+    );
 
     // Adjust for shift filtering
     let queryStartDate = startDate;
@@ -101,12 +122,38 @@ export const getDailySales = async (
       },
     }));
 
+    // Calculate top selling items for the period
+    const itemSales: Map<
+      number,
+      { name: string; quantity: number; revenue: number }
+    > = new Map();
+
+    orders.forEach((order) => {
+      const items = order.items as unknown as OrderItem[];
+      items.forEach((item: OrderItem) => {
+        const existing = itemSales.get(item.id) || {
+          name: item.name,
+          quantity: 0,
+          revenue: 0,
+        };
+        existing.quantity += item.quantity;
+        existing.revenue += item.price * item.quantity;
+        itemSales.set(item.id, existing);
+      });
+    });
+
+    // Convert to array and sort by quantity
+    const topItems = Array.from(itemSales.entries())
+      .map(([, data]) => data)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5); // Top 5 items
+
     // Create stats object to match frontend expectations
     const stats: SalesStats = {
       totalOrders,
       totalRevenue,
       avgOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
-      topItems: [], // We can populate this later if needed
+      topItems,
     };
 
     const response: ApiResponse<{
@@ -143,11 +190,27 @@ export const getUserSales = async (
     // Set default to today if no date provided
     const today = new Date();
     const startDate = filters.startDate
-      ? new Date(filters.startDate)
-      : new Date(today.setHours(0, 0, 0, 0));
+      ? new Date(filters.startDate + "T00:00:00.000Z")
+      : new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          0,
+          0,
+          0,
+          0
+        );
     const endDate = filters.endDate
-      ? new Date(filters.endDate)
-      : new Date(today.setHours(23, 59, 59, 999));
+      ? new Date(filters.endDate + "T23:59:59.999Z")
+      : new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59,
+          999
+        );
 
     // Adjust for shift filtering
     let queryStartDate = startDate;
@@ -211,12 +274,38 @@ export const getUserSales = async (
       },
     }));
 
+    // Calculate top selling items for the period
+    const itemSales: Map<
+      number,
+      { name: string; quantity: number; revenue: number }
+    > = new Map();
+
+    orders.forEach((order) => {
+      const items = order.items as unknown as OrderItem[];
+      items.forEach((item: OrderItem) => {
+        const existing = itemSales.get(item.id) || {
+          name: item.name,
+          quantity: 0,
+          revenue: 0,
+        };
+        existing.quantity += item.quantity;
+        existing.revenue += item.price * item.quantity;
+        itemSales.set(item.id, existing);
+      });
+    });
+
+    // Convert to array and sort by quantity
+    const topItems = Array.from(itemSales.entries())
+      .map(([, data]) => data)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5); // Top 5 items
+
     // Create stats object to match frontend expectations
     const stats: SalesStats = {
       totalOrders,
       totalRevenue,
       avgOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
-      topItems: [], // We can populate this later if needed
+      topItems,
     };
 
     const response: ApiResponse<{
@@ -255,9 +344,11 @@ export const getSalesAnalytics = async (
       today.getTime() - 30 * 24 * 60 * 60 * 1000
     );
     const startDate = filters.startDate
-      ? new Date(filters.startDate)
+      ? new Date(filters.startDate + "T00:00:00.000Z")
       : defaultStartDate;
-    const endDate = filters.endDate ? new Date(filters.endDate) : today;
+    const endDate = filters.endDate
+      ? new Date(filters.endDate + "T23:59:59.999Z")
+      : today;
 
     // Get total orders and revenue
     const [totalStats, dailyStats] = await Promise.all([
@@ -338,9 +429,11 @@ export const getTopSellingItems = async (
       today.getTime() - 30 * 24 * 60 * 60 * 1000
     );
     const startDate = filters.startDate
-      ? new Date(filters.startDate)
+      ? new Date(filters.startDate + "T00:00:00.000Z")
       : defaultStartDate;
-    const endDate = filters.endDate ? new Date(filters.endDate) : today;
+    const endDate = filters.endDate
+      ? new Date(filters.endDate + "T23:59:59.999Z")
+      : today;
 
     // Get all orders in the date range
     const orders = await prisma.order.findMany({

@@ -1,3 +1,3 @@
 export const formatCurrency = (amount: number): string => {
-  return `TSh ${amount.toLocaleString('en-TZ')}`;
+  return `TZS ${amount.toLocaleString("en-TZ")}`;
 };

@@ -171,7 +171,7 @@ export const SalesDashboard = () => {
               />
               <StatCard
                 title="Average Order"
-                value={formatCurrency(salesStats.avgOrderValue / 100)}
+                value={formatCurrency(salesStats.avgOrderValue)}
                 icon={TrendingUp}
                 subtitle="Per order value"
               />
@@ -209,7 +209,7 @@ export const SalesDashboard = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold">
-                            {formatCurrency(item.revenue / 100)}
+                            {formatCurrency(item.revenue)}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             Revenue
