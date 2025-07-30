@@ -47,17 +47,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (response.success && response.data) {
         const user = response.data.user;
 
+        // Don't auto-login on registration
         set({
-          user,
-          isAuthenticated: true,
+          user: null,
+          isAuthenticated: false,
           isLoading: false,
           error: null,
         });
 
-      
         toast.success(
           "Account created successfully!",
-          `Welcome, ${user.name}! You can now start using the POS system.`
+          `Welcome, ${user.name}! Please log in to start using the POS system.`
         );
 
         return { success: true };
@@ -65,7 +65,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const errorMessage = response.message || "Registration failed";
         set({ isLoading: false, error: errorMessage });
 
-    
         toast.error("Registration failed", errorMessage);
 
         return { success: false, error: errorMessage };

@@ -69,7 +69,7 @@ export const RegisterForm = () => {
     const result = await register(formData as RegisterRequest);
 
     if (result.success) {
-      navigate("/pos");
+      navigate("/login");
     }
     // Error handling is now done in the auth store with toasts
   };

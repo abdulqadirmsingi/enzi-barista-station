@@ -63,26 +63,18 @@ export const register = async (
       },
     });
 
-    // Generate JWT token
-    const token = generateToken({
-      userId: user.id,
-      email: user.email,
-    });
-
-    // Set cookie
-    setTokenCookie(res, token);
-
-    // Send response
-    const response: ApiResponse<AuthResponse> = {
+    // Send response without token (don't auto-login on registration)
+    const response: ApiResponse<{
+      user: { id: string; email: string; name: string };
+    }> = {
       success: true,
-      message: "User registered successfully",
+      message: "User registered successfully. Please log in to continue.",
       data: {
         user: {
           id: user.id,
           email: user.email,
           name: user.name,
         },
-        token,
       },
     };
 

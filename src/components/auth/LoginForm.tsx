@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -22,7 +22,13 @@ export const LoginForm = () => {
   >({});
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isLoading, error, clearError } = useAuthStore();
+
+  // Get the intended destination or default to POS
+  const from =
+    (location.state as { from?: { pathname: string } })?.from?.pathname ||
+    "/pos";
 
   const handleInputChange =
     (field: keyof LoginFormData) =>
@@ -68,7 +74,7 @@ export const LoginForm = () => {
     const result = await login(formData as LoginRequest);
 
     if (result.success) {
-      navigate("/pos");
+      navigate(from, { replace: true });
     }
     // Error handling is now done in the auth store with toasts
   };

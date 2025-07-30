@@ -98,6 +98,10 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface RegisterResponse {
+  user: User;
+}
+
 export interface ValidationError {
   field: string;
   message: string;

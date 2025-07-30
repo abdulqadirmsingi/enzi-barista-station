@@ -1,6 +1,7 @@
 import {
   ApiResponse,
   AuthResponse,
+  RegisterResponse,
   RegisterRequest,
   LoginRequest,
   User,
@@ -11,8 +12,7 @@ import {
   ReceiptData,
 } from "@/types";
 
-
-const API_BASE_URL = "https://enzi-backend.onrender.com/api";
+const API_BASE_URL = "http://localhost:5000/api";
 
 class ApiService {
   private async request<T>(
@@ -49,15 +49,17 @@ class ApiService {
     } catch (error) {
       // Log the error if it's not already logged
       if (error instanceof Error && !error.message.includes("HTTP error!")) {
-        console.error('API Error:', { method, endpoint, error: error.message });
+        console.error("API Error:", { method, endpoint, error: error.message });
       }
       throw error;
     }
   }
 
   // Auth endpoints
-  async register(data: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
-    return this.request<AuthResponse>("/auth/register", {
+  async register(
+    data: RegisterRequest
+  ): Promise<ApiResponse<RegisterResponse>> {
+    return this.request<RegisterResponse>("/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
     });
