@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -97,7 +97,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/sales", salesRoutes);
 
 // 404 handler
-app.use("*", (req, res) => {
+app.use("*", (req: Request, res: Response) => {
   res.status(404).json({
     success: false,
     message: "Route not found",
