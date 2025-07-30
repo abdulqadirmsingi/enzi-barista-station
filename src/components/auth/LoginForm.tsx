@@ -23,7 +23,7 @@ export const LoginForm = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login, isLoginLoading, error, clearError } = useAuthStore();
 
   // Get the intended destination or default to POS
   const from =
@@ -129,8 +129,8 @@ export const LoginForm = () => {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
+          <Button type="submit" className="w-full" disabled={isLoginLoading}>
+            {isLoginLoading ? "Signing in..." : "Sign In"}
           </Button>
 
           <div className="text-center text-sm">

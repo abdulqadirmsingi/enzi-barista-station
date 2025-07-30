@@ -23,7 +23,7 @@ export const RegisterForm = () => {
   >({});
 
   const navigate = useNavigate();
-  const { register, isLoading, error, clearError } = useAuthStore();
+  const { register, isRegisterLoading, error, clearError } = useAuthStore();
 
   const handleInputChange =
     (field: keyof RegisterFormData) =>
@@ -140,8 +140,8 @@ export const RegisterForm = () => {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating Account..." : "Create Account"}
+          <Button type="submit" className="w-full" disabled={isRegisterLoading}>
+            {isRegisterLoading ? "Creating Account..." : "Create Account"}
           </Button>
 
           <div className="text-center text-sm">

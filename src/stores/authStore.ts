@@ -7,6 +7,8 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isLoginLoading: boolean;
+  isRegisterLoading: boolean;
   error: string | null;
 
   // Actions
@@ -24,6 +26,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isLoginLoading: false,
+  isRegisterLoading: false,
   error: null,
 
   setUser: (user) =>
@@ -34,7 +38,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }),
 
   register: async (data: RegisterRequest) => {
-    set({ isLoading: true, error: null });
+    set({ isRegisterLoading: true, error: null });
 
     toast.loading(
       "Creating your account...",
@@ -51,7 +55,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({
           user: null,
           isAuthenticated: false,
-          isLoading: false,
+          isRegisterLoading: false,
           error: null,
         });
 
@@ -63,7 +67,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return { success: true };
       } else {
         const errorMessage = response.message || "Registration failed";
-        set({ isLoading: false, error: errorMessage });
+        set({ isRegisterLoading: false, error: errorMessage });
 
         toast.error("Registration failed", errorMessage);
 
@@ -72,7 +76,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Registration failed";
-      set({ isLoading: false, error: errorMessage });
+      set({ isRegisterLoading: false, error: errorMessage });
 
       toast.error(
         "Registration failed",
@@ -84,7 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   login: async (data: LoginRequest) => {
-    set({ isLoading: true, error: null });
+    set({ isLoginLoading: true, error: null });
 
     toast.loading("Signing you in...", "Verifying your credentials");
 
@@ -97,7 +101,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({
           user,
           isAuthenticated: true,
-          isLoading: false,
+          isLoginLoading: false,
           error: null,
         });
 
@@ -109,7 +113,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return { success: true };
       } else {
         const errorMessage = response.message || "Login failed";
-        set({ isLoading: false, error: errorMessage });
+        set({ isLoginLoading: false, error: errorMessage });
 
         toast.error("Sign in failed", errorMessage);
 
@@ -118,7 +122,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Login failed";
-      set({ isLoading: false, error: errorMessage });
+      set({ isLoginLoading: false, error: errorMessage });
 
       toast.error("Sign in failed", "Please check your email and password");
 
