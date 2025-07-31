@@ -12,8 +12,6 @@ import {
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuthStore } from "@/stores/authStore";
-import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -25,21 +23,8 @@ const queryClient = new QueryClient();
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuthStore();
-  const { isInitialized } = useAuth();
+  const { isAuthenticated } = useAuthStore();
   const location = useLocation();
-
-  // Show loading while auth is being checked
-  if (!isInitialized || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Only redirect to /pos if user is authenticated and trying to access home page
   // Don't redirect if they're specifically trying to access /login or /register

@@ -40,11 +40,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (data: RegisterRequest) => {
     set({ isRegisterLoading: true, error: null });
 
-    toast.loading(
-      "Creating your account...",
-      "Please wait while we set up your profile"
-    );
-
     try {
       const response = await apiService.register(data);
 
@@ -90,8 +85,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (data: LoginRequest) => {
     set({ isLoginLoading: true, error: null });
 
-    toast.loading("Signing you in...", "Verifying your credentials");
-
     try {
       const response = await apiService.login(data);
 
@@ -131,11 +124,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    set({ isLoading: true });
-
-    // Show loading toast
-    toast.loading("Signing you out...", "Please wait");
-
     try {
       await apiService.logout();
 
@@ -157,8 +145,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   checkAuth: async () => {
-    set({ isLoading: true });
-
+    // Simplified checkAuth without loading state for faster performance
     try {
       const response = await apiService.checkAuth();
 
@@ -166,14 +153,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({
           user: response.data.user,
           isAuthenticated: true,
-          isLoading: false,
           error: null,
         });
       } else {
         set({
           user: null,
           isAuthenticated: false,
-          isLoading: false,
           error: null,
         });
       }
@@ -181,7 +166,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         user: null,
         isAuthenticated: false,
-        isLoading: false,
         error: null,
       });
     }
