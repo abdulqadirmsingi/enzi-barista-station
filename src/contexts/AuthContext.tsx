@@ -1,4 +1,5 @@
-import { createContext, ReactNode } from "react";
+import { createContext, ReactNode, useEffect } from "react";
+import { useAuthStore } from "@/stores/authStore";
 
 interface AuthContextType {
   isInitialized: boolean;
@@ -11,11 +12,15 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  // Remove the checkAuth call on startup to make app load faster
-  // Authentication will be checked only when needed
+  const { checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    // Check authentication status on app startup
+    checkAuth();
+  }, [checkAuth]);
 
   const value = {
-    isInitialized: true, // Always set to true for faster loading
+    isInitialized: true,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
