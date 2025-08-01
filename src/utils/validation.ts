@@ -87,9 +87,9 @@ export const validatePhoneNumber = (phone: string): boolean => {
 
 // Price formatting and validation
 export const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("sw-TZ", {
     style: "currency",
-    currency: "USD",
+    currency: "TZS",
   }).format(price);
 };
 

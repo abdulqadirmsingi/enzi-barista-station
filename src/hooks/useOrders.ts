@@ -20,7 +20,7 @@ export const useOrders = () => {
           toast({
             title: "Order placed successfully!",
             description: `Order total: TSh ${response.data.order.totalAmount.toLocaleString(
-              "en-TZ"
+              "sw-TZ"
             )}`,
           });
           return response.data.order;

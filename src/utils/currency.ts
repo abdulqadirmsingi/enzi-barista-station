@@ -3,14 +3,14 @@
  */
 
 // Default currency configuration
-const DEFAULT_CURRENCY = "USD";
-const DEFAULT_LOCALE = "en-US";
+const DEFAULT_CURRENCY = "TZS"; // Tanzanian Shilling
+const DEFAULT_LOCALE = "sw-TZ"; // Swahili - Tanzania
 
 /**
  * Format a number as currency string
  * @param amount - The amount to format
- * @param currency - The currency code (default: USD)
- * @param locale - The locale for formatting (default: en-US)
+ * @param currency - The currency code (default: TZS)
+ * @param locale - The locale for formatting (default: sw-TZ)
  * @returns Formatted currency string
  */
 export const formatCurrency = (
@@ -143,19 +143,19 @@ export const isValidCurrencyAmount = (amount: number): boolean => {
 };
 
 /**
- * Convert cents to dollars
+ * Convert cents to shillings
  * @param cents - Amount in cents
- * @returns Amount in dollars
+ * @returns Amount in shillings
  */
-export const centsToDollars = (cents: number): number => {
+export const centsToShillings = (cents: number): number => {
   return Math.round(cents) / 100;
 };
 
 /**
- * Convert dollars to cents
- * @param dollars - Amount in dollars
+ * Convert shillings to cents
+ * @param shillings - Amount in shillings
  * @returns Amount in cents
  */
-export const dollarsToCents = (dollars: number): number => {
-  return Math.round(dollars * 100);
+export const shillingsToCents = (shillings: number): number => {
+  return Math.round(shillings * 100);
 };
